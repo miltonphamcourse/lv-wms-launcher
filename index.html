@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Long Việt</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2f6f4f">
+<meta name="description" content="Hệ thống quản lý kho Long Việt">
+
+<!-- Icon / ứng dụng: các thẻ này nằm ở TRANG NGOÀI nên iPhone và Android đọc được (khác với trong Apps Script). -->
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Long Việt">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<style>
+  html, body { margin:0; height:100%; background:#2f6f4f; overflow:hidden; }
+  /* vùng an toàn (tai thỏ/ thanh trạng thái): để màu xanh trùng với thanh đầu của ứng dụng */
+  /* iframe là phần tử "thay thế": top+bottom KHÔNG làm nó giãn (sẽ chỉ cao 150px) -> phải đặt height rõ ràng (dvh = bỏ thanh địa chỉ động trên điện thoại) */
+  #khung { position:fixed; left:0; top:env(safe-area-inset-top, 0px); width:100%; height:calc(100% - env(safe-area-inset-top, 0px));
+           height:calc(100dvh - env(safe-area-inset-top, 0px)); border:0; background:#fff; }
+  #cho { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+         background:#fff; color:#2f6f4f; font:600 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; z-index:2; transition:opacity .25s ease; }
+  #cho img { width:92px; height:92px; border-radius:20px; box-shadow:0 6px 18px rgba(47,111,79,.25); }
+  #cho .xoay { width:26px; height:26px; border:3px solid #cfe5d8; border-top-color:#2f6f4f; border-radius:50%; animation:quay .8s linear infinite; }
+  #cho a { font-weight:600; font-size:13px; color:#2f6f4f; display:none; }
+  #cho.xong { opacity:0; pointer-events:none; }
+  @keyframes quay { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div id="cho">
+  <img src="icons/icon-192.png" alt="Long Việt">
+  <div class="xoay" aria-hidden="true"></div>
+  <div>Đang mở hệ thống...</div>
+  <a id="mo-truc-tiep" href="#" target="_blank" rel="noopener">Mở thẳng không qua trang này</a>
+</div>
+
+<iframe id="khung" title="Long Việt"
+        allow="camera *; microphone *; geolocation *; clipboard-read *; clipboard-write *; fullscreen *"></iframe>
+
+<script>
+  // ĐỊA CHỈ HỆ THỐNG (Apps Script, bản thật). Đổi ở ĐÂY nếu sau này đổi sang hệ thống khác (ví dụ bản Next.js).
+  var UNG_DUNG = 'https://script.google.com/macros/s/AKfycby3PwyfKSFMwfEuEEd7kdtpm74e3PNNkiBR3s_mU9k8F22OX-NfmqK9a1Metv37rwm92Q/exec';
+
+  // Chuyển tiếp tham số trên địa chỉ (vd ?trang=...) cho hệ thống; luôn dùng link SẠCH, không có /u/1/.
+  var dich = UNG_DUNG + (location.search || '');
+  var khung = document.getElementById('khung');
+  var cho = document.getElementById('cho');
+  var lienKet = document.getElementById('mo-truc-tiep');
+  lienKet.href = dich;
+
+  khung.addEventListener('load', function () { cho.classList.add('xong'); });
+  khung.src = dich;
+
+  // Quá 12 giây chưa tải xong: hiện đường mở thẳng (mạng yếu hoặc trình duyệt chặn khung)
+  setTimeout(function () { if (!cho.classList.contains('xong')) lienKet.style.display = 'block'; }, 12000);
+
+  // Service worker rỗng: để Chrome Android cho "Cài đặt ứng dụng". Không lưu đệm gì (luôn lấy bản mới nhất).
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
+</script>
+</body>
+</html>
