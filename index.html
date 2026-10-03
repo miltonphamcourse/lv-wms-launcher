@@ -59,10 +59,40 @@
   //  (1) hệ thống gửi tín hiệu postMessage {lvWms:'san-sang'} khi đã vẽ xong -> tắt màn hình chờ đúng lúc;
   //  (2) dự phòng (bản hệ thống cũ chưa gửi tín hiệu / tín hiệu bị chặn): tắt sau 25 giây kể từ khi vỏ tải xong.
   function tatManHinhCho() { cho.classList.add('xong'); }
+
+  // ---- GIỮ HỘ DỮ LIỆU GHI NHỚ CỦA HỆ THỐNG (03/10/2026) ----
+  // Khung bên dưới chạy "credentialless" (ẩn danh với Google) nên bộ nhớ của hệ thống trong khung chỉ sống trong một lần mở trang.
+  // Trang này giữ hộ các khóa lv_* (phiên đăng nhập, lựa chọn "Ghi nhớ đăng nhập", thông báo đã xem...) trong localStorage của chính nó.
+  // Giao thức postMessage với hệ thống (xem "CAU NOI LUU TRU VOI TRANG BOC" trong JavaScript.html của lv-wms-appsscript):
+  //   hệ thống -> trang này: {lvWms:'san-sang'} | {lvWms:'xin-luu-tru'} | {lvWms:'luu', k, v} | {lvWms:'xoa', k}
+  //   trang này -> hệ thống: {lvWms:'luu-tru', du:{...}}  (chỉ trả lời đúng khung đã hỏi, đúng nguồn của nó)
+  // An toàn: chỉ nhận từ khung Apps Script (nguồn *-script.googleusercontent.com) NẰM TRONG trang này (ev.source.top === window);
+  // một trang/cửa sổ khác giữ tham chiếu tới trang này không lấy được dữ liệu.
+  var KHOA_LUU = 'lvWmsLuuTru';
+  function docLuuTru() { try { var o = JSON.parse(localStorage.getItem(KHOA_LUU) || '{}'); return (o && typeof o === 'object') ? o : {}; } catch (e) { return {}; } }
+  function ghiLuuTru(o) { try { localStorage.setItem(KHOA_LUU, JSON.stringify(o)); } catch (e) {} }
+  function khoaHopLe(k) { return typeof k === 'string' && /^lv_[\w.@-]{1,80}$/.test(k); }
+  function tuKhungHeThong(ev) {
+    if (!/^https:\/\/[a-z0-9-]+-script\.googleusercontent\.com$/.test(ev.origin || '')) return false;
+    try { return !!ev.source && ev.source.top === window && window.top === window; } catch (e) { return false; }
+  }
   window.addEventListener('message', function (ev) {
-    if (!/(^|\.)googleusercontent\.com$|(^|\.)google\.com$/.test((ev.origin || '').replace(/^https:\/\//, ''))) return; // chỉ nhận từ khung Apps Script
-    if (ev.data && ev.data.lvWms === 'san-sang') tatManHinhCho();
+    var d = ev.data;
+    if (!d || typeof d.lvWms !== 'string' || !tuKhungHeThong(ev)) return;
+    if (d.lvWms === 'san-sang') { tatManHinhCho(); return; }
+    if (d.lvWms === 'xin-luu-tru') { try { ev.source.postMessage({ lvWms: 'luu-tru', du: docLuuTru() }, ev.origin); } catch (e) {} return; }
+    if (d.lvWms === 'luu' && khoaHopLe(d.k) && typeof d.v === 'string' && d.v.length <= 50000) {
+      var o = docLuuTru();
+      if (Object.keys(o).length < 80 || Object.prototype.hasOwnProperty.call(o, d.k)) { o[d.k] = d.v; ghiLuuTru(o); }
+      return;
+    }
+    if (d.lvWms === 'xoa' && khoaHopLe(d.k)) { var o2 = docLuuTru(); delete o2[d.k]; ghiLuuTru(o2); }
   });
+
+  // Khung "credentialless": tải hệ thống KHÔNG kèm cookie Google, nên Google không chuyển hướng theo tài khoản đang đăng nhập
+  // (nguyên nhân lỗi "Rất tiếc, không thể mở tệp tại thời điểm này" với một số tài khoản). Chrome/Edge hỗ trợ; Safari/Firefox vốn đã
+  // không gửi cookie bên thứ ba cho khung nhúng nên không cần.
+  try { if ('credentialless' in khung) khung.credentialless = true; } catch (e) {}
   khung.addEventListener('load', function () { setTimeout(tatManHinhCho, 25000); });
   khung.src = dich;
 
