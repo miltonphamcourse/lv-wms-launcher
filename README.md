@@ -4,9 +4,15 @@ Trang web tĩnh rất nhỏ, đóng vai **"vỏ" ứng dụng**: có đúng icon
 
 **Vì sao cần:** Apps Script bọc hệ thống trong khung con nằm trong trang vỏ của Google, nên iPhone/Android không đọc được icon và tên ứng dụng mà mình khai báo. Trang này đặt các thẻ đó ở trang ngoài. Nó cũng cho một **địa chỉ ngắn, luôn sạch** (không có `/u/1/`), tránh lỗi "Rất tiếc, không thể mở tệp".
 
+## Link chính (chốt 03/10/2026)
+
+**https://longvietfert.vercel.app** — đây là link gửi cho mọi người.
+
+Các link dự phòng, cùng nội dung và cùng tự cập nhật khi đẩy nhánh `main`: `https://longviet-fert.vercel.app` (cùng dự án Vercel `longviet-fert`), `https://miltonphamcourse.github.io/lv-wms-launcher/` (GitHub Pages). Mỗi link là một địa chỉ riêng với trình duyệt (biểu tượng và đăng nhập nhớ theo từng link), nên chỉ phát một link chính.
+
 ## Cách dùng
 
-Gửi cho mọi người địa chỉ của trang này (không gửi link `script.google.com` nữa). Trên điện thoại:
+Gửi cho mọi người link chính ở trên (không gửi link `script.google.com` nữa). Trên điện thoại:
 
 - **iPhone:** mở bằng **Safari** → nút Chia sẻ → **Thêm vào Màn hình chính**.
 - **Android (Chrome):** menu ⋮ → **Cài đặt ứng dụng** / **Thêm vào màn hình chính**.
