@@ -54,11 +54,20 @@
   var lienKet = document.getElementById('mo-truc-tiep');
   lienKet.href = dich;
 
-  khung.addEventListener('load', function () { cho.classList.add('xong'); });
+  // Hệ thống Apps Script tải 2 lớp: vỏ của Google xong trước (sự kiện load của khung), nội dung thật có thể chậm thêm 5-30 giây.
+  // Nếu tắt màn hình chờ ngay ở sự kiện load thì người dùng thấy MÀN TRẮNG. Vì vậy:
+  //  (1) hệ thống gửi tín hiệu postMessage {lvWms:'san-sang'} khi đã vẽ xong -> tắt màn hình chờ đúng lúc;
+  //  (2) dự phòng (bản hệ thống cũ chưa gửi tín hiệu / tín hiệu bị chặn): tắt sau 25 giây kể từ khi vỏ tải xong.
+  function tatManHinhCho() { cho.classList.add('xong'); }
+  window.addEventListener('message', function (ev) {
+    if (!/(^|\.)googleusercontent\.com$|(^|\.)google\.com$/.test((ev.origin || '').replace(/^https:\/\//, ''))) return; // chỉ nhận từ khung Apps Script
+    if (ev.data && ev.data.lvWms === 'san-sang') tatManHinhCho();
+  });
+  khung.addEventListener('load', function () { setTimeout(tatManHinhCho, 25000); });
   khung.src = dich;
 
-  // Quá 12 giây chưa tải xong: hiện đường mở thẳng (mạng yếu hoặc trình duyệt chặn khung)
-  setTimeout(function () { if (!cho.classList.contains('xong')) lienKet.style.display = 'block'; }, 12000);
+  // Quá 15 giây vẫn đang chờ: hiện đường mở thẳng (mạng yếu hoặc trình duyệt chặn khung)
+  setTimeout(function () { if (!cho.classList.contains('xong')) lienKet.style.display = 'block'; }, 15000);
 
   // Service worker rỗng: để Chrome Android cho "Cài đặt ứng dụng". Không lưu đệm gì (luôn lấy bản mới nhất).
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
